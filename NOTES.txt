@@ -1,0 +1,1 @@
+Linked List: Linked list is a collection of a Nodes connected together in a sequence. Each node contains a data and pointer to next Node in the list. 
