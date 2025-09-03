@@ -255,8 +255,7 @@ v.erase(unique(v.begin(), v.end()), v.end());
 
 A **linked list** is a linear data structure where elements (nodes) are connected together in sequence.
 
- Linked lists nodes are not stored at a contiguous location, rather they are linked using pointers to the different memory locations.
-
+Linked lists nodes are not stored at a contiguous location, rather they are linked using pointers to the different memory locations.
 
 Each node contains:
 
@@ -340,5 +339,85 @@ struct Node {
 
 - **No random access:** Must traverse from head to access a specific element.
 - **Extra memory:** Each node stores a pointer.
+
+---
+
+## 3. Stacks
+
+A **stack** is a linear data structure that follows the Last-In, First-Out (LIFO) principle.  
+The last element added is the first one to be removed.
+
+---
+
+### How Stacks Work
+
+- Elements are added and removed from only one end, called the **top**.
+- Common operations:
+  - **Push:** Add an element to the top.
+  - **Pop:** Remove the top element.
+  - **Peek/Top:** View the top element without removing it.
+
+---
+
+### Declaring & Using a Stack (C++ Example)
+
+```cpp
+#include <stack>
+using namespace std;
+
+stack<int> s;      // empty stack
+s.push(10);        // push 10
+s.push(20);        // push 20
+s.pop();           // removes 20
+int x = s.top();   // x = 10
+bool empty = s.empty(); // true if stack is empty
+```
+
+---
+
+### Time Complexities for Stack Operations
+
+- **Push:** O(1)
+- **Pop:** O(1)
+- **Top/Peek:** O(1)
+- **Size:** O(1)
+- **Empty:** O(1)
+
+---
+
+### Implementation
+
+- **Array-based stack:** Uses a fixed-size or dynamic array (e.g., `vector`).
+- **Linked list-based stack:** Uses nodes with pointers for dynamic size.
+
+---
+
+### Use Cases
+
+- Function call management (call stack)
+- Undo operations in editors
+- Expression evaluation (infix, postfix)
+- Backtracking algorithms
+
+---
+
+### Advantages
+
+- Simple and efficient for LIFO operations.
+- Fast insertion and removal.
+
+### Disadvantages
+
+- Limited access: Only the top element can be accessed.
+- Fixed size if implemented with arrays (unless using dynamic arrays or linked lists).
+
+---
+
+💡 **Notes & Best Practices**
+
+- Prefer STL `stack` for most use cases in C++.
+- Use `vector` or `deque` as underlying containers for flexibility.
+- Always check `empty()` before calling `top()` or `pop()` to avoid errors.
+- Stacks are not suitable when you need to access elements other than the top.
 
 ---
