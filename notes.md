@@ -421,3 +421,156 @@ bool empty = s.empty(); // true if stack is empty
 - Stacks are not suitable when you need to access elements other than the top.
 
 ---
+
+## 4. Queues
+
+A **queue** is a linear data structure that follows the First-In, First-Out (FIFO) principle.  
+The first element added is the first one to be removed.
+
+---
+
+### How Queues Work
+
+- Elements are added at the **rear** (back) and removed from the **front**.
+- Common operations:
+  - **Enqueue:** Add an element to the rear.
+  - **Dequeue:** Remove the front element.
+  - **Front:** View the front element without removing it.
+
+---
+
+### Declaring & Using a Queue (C++ Example)
+
+```cpp
+#include <queue>
+using namespace std;
+
+queue<int> q;      // empty queue
+q.push(10);        // enqueue 10
+q.push(20);        // enqueue 20
+q.pop();           // removes 10
+int x = q.front(); // x = 20
+bool empty = q.empty(); // true if queue is empty
+```
+
+---
+
+### Time Complexities for Queue Operations
+
+- **Enqueue (push):** O(1)
+- **Dequeue (pop):** O(1)
+- **Front:** O(1)
+- **Size:** O(1)
+- **Empty:** O(1)
+
+---
+
+### Implementation
+
+- **Array-based queue:** Uses a fixed-size or dynamic array (may require circular buffer logic).
+- **Linked list-based queue:** Uses nodes with pointers for dynamic size.
+- **STL queue:** Uses `deque` or `list` as the underlying container.
+
+---
+
+### Advantages
+
+- Simple and efficient for FIFO operations.
+- Fast insertion at rear and removal from front.
+
+### Disadvantages
+
+- Limited access: Only the front and rear elements can be accessed.
+- Fixed size if implemented with arrays (unless using dynamic arrays or linked lists).
+
+---
+
+💡 **Notes & Best Practices**
+
+- Prefer STL `queue` for most use cases in C++.
+- Use `deque` or `list` for flexible underlying containers.
+- Always check `empty()` before calling `front()` or `pop()` to avoid errors.
+- Queues are not suitable when you need to access elements other than the front or rear.
+
+### Priority Queue
+
+A **priority queue** is a special type of queue where each element is assigned a **priority**,  
+and elements with **higher priority** are served before those with lower priority.  
+If two elements have the same priority, they are served according to their order in the queue.
+
+---
+
+### How Priority Queues Work
+
+- Elements are ordered by **priority**, not by insertion order.
+- By default in C++:
+  - The **largest element** has the highest priority (max-heap).
+- Common operations:
+  - **Push (enqueue):** Insert an element.
+  - **Pop (dequeue):** Remove the element with the highest priority.
+  - **Top:** Access the element with the highest priority.
+
+---
+
+### Declaring & Using a Priority Queue (C++ Example)
+
+```cpp
+#include <queue>
+using namespace std;
+
+priority_queue<int> pq;   // max-heap by default
+
+pq.push(10);   // insert 10
+pq.push(5);    // insert 5
+pq.push(20);   // insert 20
+
+int x = pq.top(); // x = 20 (highest priority)
+pq.pop();         // removes 20
+bool empty = pq.empty(); // true if empty
+
+// Min-heap example:
+priority_queue<int, vector<int>, greater<int>> min_pq;
+min_pq.push(10);
+min_pq.push(5);
+min_pq.push(20);
+int y = min_pq.top(); // y = 5 (smallest element)
+```
+
+### Time Complexities for Priority Queue Operations
+
+- **Push (insert):** O(log n)
+- **Pop (remove top):** O(log n)
+- **Top (peek max/min):** O(1)
+- **Size:** O(1)
+- **Empty:** O(1)
+
+---
+
+### Implementation
+
+- **Heap-based (common):** Usually implemented with a binary heap.
+- **STL priority_queue:** Built on top of a max-heap (`std::make_heap`, `std::push_heap`, `std::pop_heap`).
+- **Other options:** Fibonacci heap, binary search tree, etc. (less common in practice).
+
+---
+
+### Advantages
+
+- Efficient for retrieving the highest (or lowest) priority element.
+- Automatically keeps elements sorted by priority.
+
+---
+
+### Disadvantages
+
+- No random access to arbitrary elements.
+- Insertion and deletion are slower than simple queues (O(log n) vs O(1)).
+
+---
+
+### 💡 Notes & Best Practices
+
+- Use `priority_queue` when order matters more than insertion sequence.
+- Use **max-heap** (default) for largest-first behavior.
+- Use **min-heap** with `greater<T>` comparator when you need smallest-first.
+- Always check `empty()` before `top()` or `pop()`.

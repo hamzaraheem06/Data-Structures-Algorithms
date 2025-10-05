@@ -42,6 +42,8 @@ class Stack {
         }
 };
 
+// implement using linked list
+
 int main() {
     Stack myst;
 

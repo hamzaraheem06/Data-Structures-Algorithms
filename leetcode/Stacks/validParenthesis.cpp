@@ -14,7 +14,7 @@ class Solution {
             if (p == '(' || p == '[' || p == '{' ) {
                 st.push(p);
             }
-            else {
+            else if (p == ')' || p == ']' || p == '}' ) {
                 if(st.empty()) return false;
 
                 if(p == ')' && st.top() == '(') {
@@ -29,7 +29,7 @@ class Solution {
             }
         }
 
-        return (st.empty())? true : false;
+        return st.empty();
     }
 };
 
