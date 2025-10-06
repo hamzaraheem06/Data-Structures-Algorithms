@@ -1,3 +1,12 @@
-Stack:
+Binary Tree:
 
-Stack is a linear structure that works on LIFO ( Last In => First Out) priniciple. 
+A tree having nodes which can atmost have 2 children
+
+struct BinaryNode {
+    T data;
+    BinaryNode* left;
+    BinaryNode* right;
+
+    BinaryNode(data): data(data) {}
+}
+

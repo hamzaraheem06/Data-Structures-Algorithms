@@ -574,3 +574,349 @@ int y = min_pq.top(); // y = 5 (smallest element)
 - Use **max-heap** (default) for largest-first behavior.
 - Use **min-heap** with `greater<T>` comparator when you need smallest-first.
 - Always check `empty()` before `top()` or `pop()`.
+
+# Non-Linear Data Structures
+
+Non-linear data structures are those in which elements are not arranged sequentially.
+
+Each element can connect to multiple other elements, forming a hierarchy or network-like structure instead of a simple line.
+
+**Examples:**
+
+- Trees
+- Heaps
+- Tries
+- Graphs
+
+**Characteristics:**
+
+- Elements have multiple relationships, not just predecessor and successor.
+- Data is organized hierarchically (like in trees) or interconnected (like in graphs).
+- Traversal is more complex and can occur in multiple directions (e.g., depth-first, breadth-first).
+
+**Use Cases:**  
+Non-linear data structures are ideal for representing hierarchical relationships (like file systems, organizational charts) and network connections (like social networks, maps, or web links).
+
+## 1. Trees
+
+A **tree** is a **non-linear data structure** that represents data in a **hierarchical form**.  
+It consists of **nodes** connected by **edges**, forming a structure similar to an inverted tree in nature.
+
+Each node contains:
+
+- **Data:** The value stored in the node.
+- **Links (edges):** References to its **child nodes**.
+
+```cpp
+struct Node {
+    int data;
+    Node* left;
+    Node* right;
+};
+```
+
+---
+
+### Basic Terminology
+
+- **Root:**  
+  The topmost node of the tree. It has no parent.
+
+- **Child:**  
+  A node that descends from another node (its parent).
+
+- **Parent:**  
+  A node that has one or more children.
+
+- **Leaf Node:**  
+  A node with no children.
+
+- **Edge:**  
+  A link connecting a parent to a child node.
+
+- **Level:**  
+  The distance from the root node. The root is at level 0.
+
+- **Height:**  
+  The longest path from the root to a leaf node.
+
+### Pictorial Representation:
+
+```css
+                             [Root]
+                               │
+                 ┌─────────────┴─────────────┐
+                 │                           │
+              [Child A]                   [Child B]
+                 │                           │
+        ┌────────┴───────┐             ┌─────┴───────┐
+        │                │             │             │
+    [Child A1]       [Child A2]    [Child B1]     [Child B2]
+        │                              │             │
+      [Leaf]                         [Leaf]        [Leaf]
+```
+
+---
+
+### Characteristics of Trees
+
+- One node is designated as the **root**.
+- Each child node can have **zero or more children**.
+- There are **no cycles** (unlike graphs).
+- If there are `n` nodes, there will always be `n - 1` edges.
+
+---
+
+### Types of Trees (Broad Overview)
+
+- **General Tree:**  
+  Each node can have any number of children.
+
+- **Binary Tree:**  
+  Each node has **at most two children** — a left and a right child.
+
+- **Binary Search Tree (BST):**  
+  A binary tree where:
+
+  - Left child < Parent
+  - Right child > Parent
+
+- **Balanced Trees:**  
+  Trees like AVL or Red-Black Trees maintain height balance for efficient operations.
+
+- **Heaps:**  
+  Trees used for priority-based operations (e.g., Min Heap, Max Heap).
+
+---
+
+### Key Operations on Trees
+
+- **Traversal:**
+
+  - **Preorder (Root → Left → Right)**
+  - **Inorder (Left → Root → Right)**
+  - **Postorder (Left → Right → Root)**
+  - **Level Order (Breadth-first traversal)**
+
+- **Insertion:** Add a node at the correct position.
+- **Deletion:** Remove a node while maintaining tree properties.
+- **Searching:** Find a node with a given value.
+
+---
+
+### Advantages
+
+- **Hierarchical representation:** Ideal for modeling parent-child relationships.
+- **Efficient searching and sorting** (especially in BSTs).
+- **Dynamic structure:** Nodes can be easily added or removed.
+
+### Disadvantages
+
+- **Complex implementation** compared to linear structures.
+- **Traversal is slower** than arrays for sequential access.
+- **Memory overhead:** Each node requires multiple pointers.
+
+---
+
+### Real-World Applications
+
+- File system hierarchy
+- XML/HTML document parsing
+- Database indexing (B-trees)
+- Artificial Intelligence (decision trees)
+- Expression parsing and evaluation
+
+---
+
+## Binary Trees
+
+A **Binary Tree** is a **a type of tree** in which each node can have **at most two children** — referred to as the **left child** and the **right child**.
+
+Each node represents a data element and its connections to subtrees.
+
+### Structure of a Binary Tree
+
+Each node in a binary tree has:
+
+- **Data:** The value stored in the node.
+- **Left pointer:** Points to the left child node.
+- **Right pointer:** Points to the right child node.
+
+---
+
+```cpp
+template <typename T>
+struct BinaryNode {
+    T data;
+    BinaryNode* left;
+    BinaryNode* right;
+
+    BinaryNode(T data) : data(data), left(nullptr), right(nullptr) {}
+};
+```
+
+---
+
+### Properties of Binary Trees
+
+1. Each node can have **0, 1, or 2 children**.
+2. A binary tree of height `h` has at most `2^(h+1) - 1` nodes.
+
+---
+
+### Declaring & Using a Binary Tree (C++ Example)
+
+```cpp
+#include <iostream>
+using namespace std;
+
+struct Node {
+int data;
+Node* left;
+Node* right;
+
+    Node(int value) : data(value), left(nullptr), right(nullptr) {}
+
+};
+
+int main() {
+Node\* root = new Node(10);
+root->left = new Node(5);
+root->right = new Node(20);
+
+    cout << "Root: " << root->data << endl;       // 10
+    cout << "Left Child: " << root->left->data << endl; // 5
+    cout << "Right Child: " << root->right->data << endl; // 20
+
+}
+```
+
+### Types of Binary Trees
+
+- **Full Binary Tree:**  
+  Every node has either **0 or 2 children**.
+
+- **Perfect Binary Tree:**  
+  All internal nodes have **two children**, and all leaf nodes are at the **same level**.
+
+- **Complete Binary Tree:**  
+  All levels are completely filled except possibly the last, which is filled from **left to right**.
+
+- **Skewed Binary Tree:**  
+  All nodes have only **one child**, either left or right — forming a chain-like structure.
+
+- **Balanced Binary Tree:**  
+  The height difference between the left and right subtree of every node is **at most 1**.
+
+---
+
+### Basic Operations and Their Complexity
+
+| Operation | Description                       | Time Complexity |
+| --------- | --------------------------------- | --------------- |
+| Insertion | Add a new node to the tree        | O(n)            |
+| Deletion  | Remove a node from the tree       | O(n)            |
+| Searching | Find a node with given value      | O(n)            |
+| Traversal | Visit each node in specific order | O(n)            |
+
+---
+
+💡 Notes & Best Practices
+
+- Always check for nullptr before accessing child nodes.
+- Use recursive functions for easy tree traversal.
+- For balanced operations, prefer AVL or Red-Black Trees.
+- Avoid excessive dynamic allocations to prevent memory leaks.
+
+## Binary Search Tree (BST)
+
+A **Binary Search Tree** is a binary tree where:
+
+- The **left subtree** of a node contains only nodes with values **less than** the node’s value.
+- The **right subtree** of a node contains only nodes with values **greater than** the node’s value.
+- Both left and right subtrees must also be **binary search trees**.
+
+---
+
+**TLDR**: Binary tree with a rule that add a child node to left of the node if its value is less, else add a child node to right;
+
+### Structure of the BST
+
+```cpp
+struct BSTNode {
+    int data;
+    BSTNode* left;
+    BSTNode* right;
+
+    BSTNode(int value) : data(value), left(nullptr), right(nullptr) {}
+};
+```
+
+---
+
+### Key Operations in BST
+
+| Operation     | Description                                    | Time Complexity (Average) | Time Complexity (Worst) |
+| ------------- | ---------------------------------------------- | ------------------------- | ----------------------- |
+| **Insert**    | Add a new node maintaining BST property        | O(log n)                  | O(n)                    |
+| **Search**    | Find a node by value                           | O(log n)                  | O(n)                    |
+| **Delete**    | Remove a node and rearrange tree               | O(log n)                  | O(n)                    |
+| **Traversal** | Visit all nodes (Inorder, Preorder, Postorder) | O(n)                      | O(n)                    |
+
+---
+
+### How BST Works
+
+- **Insertion:**  
+  Compare the new value with the root.
+
+  - If smaller → go left.
+  - If larger → go right.
+  - Repeat until the correct position is found.
+
+- **Searching:**  
+  Similar to insertion, compare with current node and traverse left or right until found or NULL.
+
+- **Deletion Cases:**
+  1. **Leaf Node:** Remove directly.
+  2. **One Child:** Replace the node with its child.
+  3. **Two Children:** Replace with inorder successor (smallest in right subtree).
+
+---
+
+### Example
+
+**BST for elements:** 50, 30, 70, 20, 40, 60, 80
+
+```cpp
+        50
+       /  \
+      30   70
+     / \   / \
+    20 40 60  80
+
+```
+
+---
+
+### Advantages
+
+- Efficient for **searching, insertion, and deletion**.
+- Provides sorted order traversal.
+- Easy to implement recursively.
+
+### Disadvantages
+
+- Performance degrades to O(n) if the tree becomes **unbalanced** (e.g., inserting sorted data).
+- Requires balancing (like AVL or Red-Black Trees) for guaranteed efficiency.
+
+---
+
+### 💡 **Notes & Best Practices**
+
+- Always ensure the tree remains **balanced** for optimal performance.
+- **Inorder traversal** gives elements in **ascending order**.
+- Avoid inserting duplicate values unless handling duplicates explicitly.
+- Use **recursive or iterative** approaches depending on problem requirements.
+
+---
