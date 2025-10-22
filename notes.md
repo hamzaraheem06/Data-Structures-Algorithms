@@ -920,3 +920,175 @@ struct BSTNode {
 - Use **recursive or iterative** approaches depending on problem requirements.
 
 ---
+
+## Types of Tree Traversal
+
+Traversal means **visiting every node** in the tree exactly once in a specific order.
+
+Broadly, there are two kinds of tree traversal algorithms:
+
+## 1. Depth First Search (DFS)
+
+We explore as far as possible along each branch before backtracking.  
+This means visiting deeper nodes first, then moving upward.
+
+1. **Pre-Order Traversal (Root → Left → Right)**
+
+- Visit the root first.
+- Then traverse the left subtree.
+- Finally traverse the right subtree.
+- Use: Used to create a copy of a tree or prefix expression (in expression trees).
+
+```cpp
+void preorder(Node* root) {
+    if (!root) return;
+    cout << root->val << " ";
+    preorder(root->left);
+    preorder(root->right);
+}
+```
+
+2. **In-Order Traversal (Left → Root → Right)**
+
+- Traverse the left subtree.
+- Visit the root node.
+- Then traverse the right subtree.
+- Use: In a Binary Search Tree, in-order traversal gives elements in sorted order.
+
+```cpp
+void inorder(Node* root) {
+    if (!root) return;
+    inorder(root->left);
+    cout << root->val << " ";
+    inorder(root->right);
+}
+```
+
+3. **Post-Order Traversal (Left → Right → Root)**
+
+- Traverse the left subtree.
+- Then traverse the right subtree.
+- Finally, visit the root.
+- Use: Useful for deleting or freeing nodes (bottom-up), or postfix expression evaluation.
+
+```cpp
+void postorder(Node* root) {
+    if (!root) return;
+    postorder(root->left);
+    postorder(root->right);
+    cout << root->val << " ";
+}
+```
+
+### Example (DFS):
+
+For the following tree:
+
+```
+      10
+     /  \
+    5    15
+   / \     \
+  2   7     20
+```
+
+- **Preorder:** 10, 5, 2, 7, 15, 20
+- **Inorder:** 2, 5, 7, 10, 15, 20
+- **Postorder:** 2, 7, 5, 20, 15, 10
+
+---
+
+## 2. Breadth First Search (BFS)
+
+Also called Level-Order Traversal.  
+We visit all nodes level by level — i.e., all nodes at depth 1, then depth 2, and so on.
+
+Use: Used when processing elements level-wise — e.g., finding shortest path in unweighted trees or printing tree level by level.
+
+```cpp
+#include <queue>
+void levelOrder(Node* root) {
+    if (!root) return;
+    queue<Node*> q;
+    q.push(root);
+    while (!q.empty()) {
+        Node* curr = q.front();
+        q.pop();
+        cout << curr->val << " ";
+        if (curr->left) q.push(curr->left);
+        if (curr->right) q.push(curr->right);
+    }
+}
+```
+
+### Example (BFS):
+
+For the same tree:
+
+```
+      10
+     /  \
+    5    15
+   / \     \
+  2   7     20
+```
+
+**Level Order Traversal:** 10, 5, 15, 2, 7, 20
+
+## Complete Binary Tree:
+
+For a **binary tree** to be said a **complete**, if it satisfies two conditions:
+
+i. Each level of the BST has maximum possible nodes.  
+The formula: `Maximum Nodes = 2^d` where d is depth of the particular level.
+
+ii. If the last level doesn't have maximum number of nodes, the available nodes must be as far left as possible.
+
+## Depth and Height of a Node:
+
+A **node** in a tree has two important characteristics: **Depth** and **Height**.
+
+### 1. Depth
+
+The **depth** of a node means how far (level-wise) a node is from the **root** of the tree.
+
+```css
+    8
+   / \
+  5   10
+ / \    \
+2   7    12
+```
+
+For example:  
+Depth of node **7** in the tree below is **2**.
+
+### _Explanation_:
+
+- At root: **Depth = 0**
+- Next row `[5, 10]`: **Depth = 1**
+- Next row `[2, 7, 12]`: **Depth = 2**
+
+Since **7** is in the last row, its **depth = 2**.
+
+---
+
+### 2. Height
+
+The **height** of a node is the number of rows (or edges) from that node down to the **leaves** of the tree.
+
+For example:  
+Height of node **10** is **2**, since it is **two rows above the leaves**.
+
+```css
+    8
+   / \
+  5   10
+ / \    \
+2   7    12
+```
+
+- Height of **12** = 0 (leaf node)
+- Height of **10** = 1 + max(height of left, right) = 1 + 1 = **2**
+
+---

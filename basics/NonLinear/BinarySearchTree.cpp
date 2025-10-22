@@ -1,4 +1,5 @@
 #include<iostream>
+#include<vector>
 using namespace std;
 
 
@@ -12,9 +13,114 @@ struct Node {
 
 class BinarySearchTree {
     private: 
+        Node* root;
+
+        Node* recursiveInsert(Node* root, int value) {
+            if(!root) {
+                root = new Node(value);
+                return root;
+            }
+
+            if (value < root->val)
+                root->left = recursiveInsert(root->left, value);
+            else
+                root->right = recursiveInsert(root->right, value);
+            return root;
+        }
+
+        // go to root, print it, go to left subtree, go to right subtree
+        // Root -> Left -> Right
+        void pre_order(Node* root) {
+            if (!root) return;
+            cout << root->val << " ";
+
+            pre_order(root->left);
+            pre_order(root->right);
+        } 
+
+
+        // Traverse left subtree, print it, go to root, print, go to right subtree
+        //  Left -> Root -> Right
+        void in_order(Node* root) {
+            if(!root) return;
+            in_order(root->left);
+            cout << root->val << " ";
+
+            in_order(root->right);
+        }
+
+        // Traverse left subtree, then right and then root;
+        // Left -> Right > Root;
+        void post_order(Node* root) {
+            if(!root) return;
+
+            post_order(root->left);
+            post_order(root->right);
+            cout << root->val << " ";
+        }
+
+        int depth_of_node(Node* root, int val, int depth = 0) {
+            if (!root) return -1;
+
+            if (root->val == val) return depth;
+
+            if (root->val > val) return depth_of_node(root->left, val, depth + 1);
+            else return depth_of_node(root->right, val, depth + 1);
+        }
+
+        int height_of_node(Node* root) {
+            if (!root) return 0;
+
+            return 1 + max(height_of_node(root->left), height_of_node(root->right));
+        }
+
+        // Display tree in a tree-like (sideways) structure
+        void display_tree(Node* root, int space = 0, int indent = 5) {
+
+            if (root == nullptr)
+                return;
+
+            // Increase distance between levels
+            space += indent;
+
+            // Print right child first
+            display_tree(root->right, space);
+
+            // Print current node after spacing
+            cout << endl;
+            for (int i = indent; i < space; i++)
+                cout << " ";
+            cout << root->val << "\n";
+
+            // Print left child
+            display_tree(root->left, space);
+        }
+
+        bool check_equal(Node* root1, Node* root2) {
+            if(!root1 && !root2) return true;
+
+            return root1->val == root2->val && check_equal(root1->left, root2->left) && check_equal(root1->right, root2->right);
+        }
+
+        bool check_valid(Node* root, int minVal = INT_MIN, int maxVal = INT_MAX) {
+            if (!root) return true;
+
+            if (root->val <= minVal || root->val >= maxVal)
+                return false;
+
+            return check_valid(root->left, minVal, root->val) &&
+                check_valid(root->right, root->val, maxVal);
+        }
+
+    
     public:
-    Node* root;
         BinarySearchTree() : root(nullptr) {}
+
+        BinarySearchTree(vector<int> &arr) : root(nullptr) {
+            for (int num: arr) {
+                this->rec_insert(num);
+            }
+        }
 
         void insert(int value) {
             Node* newNode = new Node(value);
@@ -45,7 +151,12 @@ class BinarySearchTree {
         }
 
 
-        Node* min() {
+        void rec_insert(int val) {
+            root = recursiveInsert(root, val);
+        }
+
+
+        Node* minimum() {
             if (!root) {
                 cout << "Empty tree. \n";
                 return nullptr;
@@ -59,7 +170,7 @@ class BinarySearchTree {
             return temp;
         }
 
-        Node* max() {
+        Node* maximum() {
              if (!root) {
                 cout << "Empty tree. \n";
                 return nullptr;
@@ -95,6 +206,40 @@ class BinarySearchTree {
 
             if(x->val > key) return searchTree(x->left, key);
             else return searchTree(x->right, key);
+        }
+
+        Node* successor(int key) {
+            if(!root) {
+                cout << "Empty tree.\n";
+                return nullptr;
+            }
+
+            Node* cur = search(key);
+
+            Node* s = cur->right;
+
+            while(s) {
+                s = s->left;
+            }
+
+            return s;
+        }
+
+        Node* predecessor(int key) {
+            if(!root) {
+                cout << "Empty tree.\n";
+                return nullptr;
+            }
+
+            Node* cur = search(key);
+
+            Node* p = cur->left;
+
+            while(p) {
+                p = p->right;
+            }
+
+            return p;
         }
 
         void remove(int key) {
@@ -171,47 +316,76 @@ class BinarySearchTree {
             cout << "Deleted " << key << " successfully.\n";
         }
 
-        // Display tree in a tree-like (sideways) structure
-        void display(Node* root, int space = 0, int indent = 5) {
+        int depth(int val) {
+            return depth_of_node(root, val);
+        }
 
-            if (root == nullptr)
-                return;
+        int height(int val) {
+            Node* cur = search(val);
 
-            // Increase distance between levels
-            space += indent;
+            if (!cur) return -1;
 
-            // Print right child first
-            display(root->right, space);
+            return height_of_node(cur);
+        }
 
-            // Print current node after spacing
-            cout << endl;
-            for (int i = indent; i < space; i++)
-                cout << " ";
-            cout << root->val << "\n";
+        void preOrder() {
+            pre_order(root);
+        }
 
-            // Print left child
-            display(root->left, space);
+        void inOrder() {
+            in_order(root);
+        }
+
+        void postOrder() {
+            post_order(root);
+        }
+
+        bool equal(BinarySearchTree& other) {
+            return check_equal(root, other.root);
+        }
+
+        bool isValid() {
+            return check_valid(root);
+        }
+
+        void display() {
+            display_tree(root);
         }
 
 };
 
 int main() {
-    BinarySearchTree tree;
+    // BinarySearchTree tree;
+    
+    // tree.insert(50);
+    // tree.insert(30);
+    // tree.insert(70);
+    // tree.insert(20);
+    // tree.insert(40);
+    // tree.insert(60);
+    // tree.insert(45);
+    // tree.insert(65);
 
-    tree.insert(50);
-    tree.insert(30);
-    tree.insert(70);
-    tree.insert(20);
-    tree.insert(40);
-    tree.insert(60);
-    tree.insert(45);
-    tree.insert(65);
+    // tree.display(tree.root);
 
-    tree.display(tree.root);
+    // tree.remove(50);
 
-    tree.remove(50);
+    vector<int> nums1{8, 5, 7, 2, 10, 12};
+    vector<int> nums2{8, 5, 7, 2, 10, 12};
+    BinarySearchTree t1(nums1);
 
-    tree.display(tree.root);
+    BinarySearchTree t2(nums2);
+
+    cout << "BST 1: "<< endl;
+    t1.display();
+
+
+    cout << "BST 2: "<< endl;
+    t2.display();
+
+    cout << "Are equal? " <<  t1.equal(t2) << endl;
+
+    cout << "T1 is valid? " << t1.isValid() << endl;
 
     // cout << "Min is " << tree.min()->val << endl;
     // cout << "Max is " << tree.max()->val << endl;

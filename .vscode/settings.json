@@ -46,6 +46,13 @@
     "typeinfo": "cpp",
     "unordered_set": "cpp",
     "list": "cpp",
-    "cstring": "cpp"
+    "cstring": "cpp",
+    "charconv": "cpp",
+    "ctime": "cpp",
+    "format": "cpp",
+    "iomanip": "cpp",
+    "span": "cpp",
+    "sstream": "cpp",
+    "variant": "cpp"
   }
 }

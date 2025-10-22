@@ -29,7 +29,6 @@ class ExpressionEvaluator {
                         output += st.top();
                         st.pop();
                     }
-
                     st.push(c);
                 } else { // operands
                     output += c;
@@ -126,10 +125,10 @@ class ExpressionEvaluator {
 };
 
 int main() {
-    string expression = "2*3/(2-1)+5*3";
+    string expression = "3+5-9+3";
     ExpressionEvaluator s;
     
-    cout << s.evaluate(s.convert(expression));
+    cout << s.convert(expression);
 
     return 0;
 }

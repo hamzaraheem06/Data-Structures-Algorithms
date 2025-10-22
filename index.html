@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>8-Ball Pool Simulation</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 20px;
+        background: #222;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        font-family: Arial, sans-serif;
+      }
+      #gameContainer {
+        position: relative;
+      }
+      canvas {
+        border: 5px solid #8b4513;
+        background: linear-gradient(to bottom, #228b22, #006400);
+        display: block;
+      }
+      #ui {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        color: white;
+        z-index: 10;
+      }
+      #powerBar {
+        width: 200px;
+        height: 20px;
+        background: rgba(0, 0, 0, 0.5);
+        margin: 5px 0;
+      }
+      #powerFill {
+        height: 100%;
+        background: red;
+        width: 0%;
+        transition: width 0.1s;
+      }
+      #spinControls {
+        display: flex;
+        gap: 10px;
+        margin: 5px 0;
+      }
+      .spinDial {
+        width: 30px;
+        height: 30px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
+      }
+      #turnIndicator {
+        font-size: 18px;
+        font-weight: bold;
+      }
+      #score {
+        font-size: 16px;
+      }
+      #winModal {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: 20px;
+        text-align: center;
+        display: none;
+        z-index: 20;
+      }
+      button {
+        padding: 10px;
+        background: #4caf50;
+        color: white;
+        border: none;
+        cursor: pointer;
+        margin: 5px;
+      }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.20.0/matter.min.js"></script>
+  </head>
+  <body>
+    <div id="gameContainer">
+      <canvas id="canvas" width="800" height="400"></canvas>
+      <div id="ui">
+        <div id="turnIndicator">Player 1's Turn</div>
+        <div id="score">Player 1: 0 | Player 2: 0</div>
+        <div>
+          Power:
+          <div id="powerBar"><div id="powerFill"></div></div>
+        </div>
+        <div>
+          Spin:
+          <div id="spinControls">
+            <input
+              type="range"
+              id="topSpin"
+              min="-5"
+              max="5"
+              value="0"
+              class="spinDial"
+              step="0.5"
+              title="Top/Bottom Spin"
+            />
+            <input
+              type="range"
+              id="sideSpin"
+              min="-5"
+              max="5"
+              value="0"
+              class="spinDial"
+              step="0.5"
+              title="Left/Right Spin"
+            />
+          </div>
+        </div>
+        <button id="aimButton" onclick="shoot()">Aim & Shoot</button>
+      </div>
+      <div id="winModal">
+        <h2 id="winText"></h2>
+        <button onclick="resetGame()">Play Again</button>
+      </div>
+    </div>
+
+    <script>
+      // Game State
+      const {
+        Engine,
+        Render,
+        Runner,
+        World,
+        Bodies,
+        Mouse,
+        MouseConstraint,
+        Events,
+        Vector,
+      } = Matter;
+      let engine, render, runner, world, mouse, mouseConstraint;
+      let balls = [],
+        pockets = [],
+        isAiming = false,
+        shotPower = 0,
+        dragStart = { x: 0, y: 0 },
+        currentPlayer = 1;
+      let player1Group = null,
+        player2Group = null,
+        gameState = "setup"; // setup, breaking, playing, won
+      let scores = { 1: 0, 2: 0 },
+        pottedBalls = { 1: [], 2: [] };
+      const cueBall = { id: 0, body: null };
+      const eightBall = { id: 8, body: null };
+      const tableWidth = 800,
+        tableHeight = 400;
+      const ballRadius = 10,
+        pocketRadius = 15;
+
+      // Ball colors and numbers (simplified: solids 1-7, stripes 9-15, 8 black, 0 white)
+      const ballData = [
+        { num: 0, color: "white", group: null }, // Cue
+        { num: 1, color: "yellow", group: "solid" },
+        { num: 2, color: "blue", group: "solid" },
+        { num: 3, color: "red", group: "solid" },
+        { num: 4, color: "purple", group: "solid" },
+        { num: 5, color: "orange", group: "solid" },
+        { num: 6, color: "green", group: "solid" },
+        { num: 7, color: "maroon", group: "solid" },
+        { num: 8, color: "black", group: "eight" },
+        { num: 9, color: "yellow", stripe: true, group: "stripe" },
+        { num: 10, color: "blue", stripe: true, group: "stripe" },
+        { num: 11, color: "red", stripe: true, group: "stripe" },
+        { num: 12, color: "purple", stripe: true, group: "stripe" },
+        { num: 13, color: "orange", stripe: true, group: "stripe" },
+        { num: 14, color: "green", stripe: true, group: "stripe" },
+        { num: 15, color: "maroon", stripe: true, group: "stripe" },
+      ];
+
+      // Init Game
+      function init() {
+        engine = Engine.create();
+        const canvas = document.getElementById("canvas");
+        render = Render.create({
+          canvas: canvas,
+          engine: engine,
+          options: {
+            width: tableWidth,
+            height: tableHeight,
+            wireframes: false,
+            background: "transparent",
+          },
+        });
+
+        world = engine.world;
+        world.gravity.y = 0; // No gravity for pool
+
+        // Table boundaries (static, friction low)
+        const tableOptions = {
+          isStatic: true,
+          restitution: 0.9,
+          friction: 0.01,
+        };
+        World.add(world, [
+          Bodies.rectangle(tableWidth / 2, -10, tableWidth, 20, tableOptions), // Top
+          Bodies.rectangle(
+            tableWidth / 2,
+            tableHeight + 10,
+            tableWidth,
+            20,
+            tableOptions
+          ), // Bottom
+          Bodies.rectangle(-10, tableHeight / 2, 20, tableHeight, tableOptions), // Left
+          Bodies.rectangle(
+            tableWidth + 10,
+            tableHeight / 2,
+            20,
+            tableHeight,
+            tableOptions
+          ), // Right
+        ]);
+
+        // Pockets (sensors)
+        const pocketPositions = [
+          { x: 0, y: 0 },
+          { x: tableWidth / 2, y: 0 },
+          { x: tableWidth, y: 0 },
+          { x: 0, y: tableHeight },
+          { x: tableWidth / 2, y: tableHeight },
+          { x: tableWidth, y: tableHeight },
+        ];
+        pockets = pocketPositions.map((pos) => {
+          const pocket = Bodies.circle(pos.x, pos.y, pocketRadius, {
+            isStatic: true,
+            isSensor: true,
+            render: { visible: false },
+          });
+          World.add(world, [pocket]); // Add as array to avoid single-add issues
+          return pocket;
+        });
+
+        // Mouse controls
+        mouse = Mouse.create(render.canvas);
+        mouseConstraint = MouseConstraint.create(engine, { mouse });
+        World.add(world, mouseConstraint);
+
+        // Create balls first to ensure they're added before events
+        createBalls();
+
+        // Friction hook for sliding/rolling (after balls exist)
+        Events.on(engine, "beforeUpdate", () => {
+          balls.forEach((ball) => {
+            if (ball.body && world.bodies.includes(ball.body)) {
+              // Check if still in world
+              const vel = ball.body.speed;
+              const omega = Math.abs(ball.body.angularSpeed);
+              const vRoll = ballRadius * omega;
+              if (vel > vRoll + 0.01) {
+                // Sliding threshold
+                // Sliding: apply friction opposite to relative velocity
+                const friction = 0.02;
+                const dir = Vector.normalise(
+                  Vector.mult(ball.body.velocity, -1)
+                );
+                Body.applyForce(
+                  ball.body,
+                  ball.body.position,
+                  Vector.mult(dir, friction * ball.body.mass)
+                );
+              } else {
+                // Rolling: small decay
+                Body.setVelocity(
+                  ball.body,
+                  Vector.mult(ball.body.velocity, 0.999)
+                );
+              }
+              // Spin decay
+              Body.setAngularVelocity(
+                ball.body,
+                ball.body.angularVelocity * 0.995
+              );
+            }
+          });
+        });
+
+        // Collision events (after all bodies added)
+        Events.on(engine, "collisionStart", (event) => {
+          event.pairs.forEach((pair) => {
+            const { bodyA, bodyB } = pair;
+            const ballA = balls.find((b) => b.body === bodyA);
+            const ballB = balls.find((b) => b.body === bodyB);
+            if ((bodyA.isSensor || bodyB.isSensor) && (ballA || ballB)) {
+              // Pocket collision
+              if (ballA && ballA.id === 0) {
+                foul();
+                return;
+              } // Scratch
+              if (ballB && ballB.id === 0) {
+                foul();
+                return;
+              }
+              potBall(ballA?.body || ballB.body);
+            } else if (ballA && ballB) {
+              handleSpinTransfer(bodyA, bodyB);
+            }
+          });
+        });
+
+        setupRack();
+        Runner.run((runner = Runner.create()));
+        Render.run(render);
+
+        // Input handlers
+        canvas.addEventListener("mousedown", onMouseDown);
+        canvas.addEventListener("mousemove", onMouseMove);
+        canvas.addEventListener("mouseup", onMouseUp);
+        document
+          .getElementById("topSpin")
+          .addEventListener("input", updateSpinPreview);
+        document
+          .getElementById("sideSpin")
+          .addEventListener("input", updateSpinPreview);
+
+        updateUI();
+        console.log("Game initialized - balls should be visible!");
+      }
+
+      // Create balls
+      function createBalls() {
+        balls = [];
+        ballData.forEach((data, id) => {
+          const options = {
+            restitution: 0.95,
+            friction: 0.005,
+            frictionAir: 0.001,
+            density: 0.001,
+            render: { fillStyle: data.color },
+          };
+          // Initial off-screen position to avoid immediate collisions
+          const body = Bodies.circle(0, 0, ballRadius, options);
+          body.label = `ball-${id}`;
+          World.add(world, body);
+          const ball = {
+            id,
+            num: data.num,
+            group: data.group,
+            body,
+            stripe: data.stripe || false,
+          };
+          balls.push(ball);
+          if (id === 0) cueBall.body = body;
+          if (id === 8) eightBall.body = body;
+        });
+      }
+
+      // Setup rack (triangle with 8-ball in center of third row)
+      function setupRack() {
+        const rackX = tableWidth / 2;
+        const rackY = tableHeight / 2;
+        const rowSpacing = ballRadius * Math.sqrt(3);
+        const colSpacing = ballRadius * 2;
+        let rackBalls = balls.filter((b) => b.id > 0 && b.id !== 8);
+        // Shuffle for random rack
+        for (let i = rackBalls.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [rackBalls[i], rackBalls[j]] = [rackBalls[j], rackBalls[i]];
+        }
+        let idx = 0;
+        for (let row = 0; row < 5; row++) {
+          const rowOffsetX = (row * colSpacing) / 2;
+          const rowY = rackY - ((4 - row) * rowSpacing) / 2; // Adjust for base at bottom
+          for (let col = 0; col <= row; col++) {
+            if (idx < rackBalls.length) {
+              const x = rackX - rowOffsetX + col * colSpacing;
+              Body.setPosition(rackBalls[idx].body, { x, y: rowY });
+              idx++;
+            }
+          }
+        }
+        // Place 8-ball in center of third row (row=2)
+        const eightRowY = rackY - ((4 - 2) * rowSpacing) / 2;
+        const eightX = rackX - (2 * colSpacing) / 2 + 1 * colSpacing; // Center of row 2 (3 balls)
+        Body.setPosition(eightBall.body, { x: eightX, y: eightRowY });
+        // Cue ball
+        Body.setPosition(cueBall.body, {
+          x: tableWidth * 0.25,
+          y: tableHeight / 2,
+        });
+        // Reset velocities
+        balls.forEach((ball) => {
+          Body.setVelocity(ball.body, { x: 0, y: 0 });
+          Body.setAngularVelocity(ball.body, 0);
+        });
+        gameState = "breaking";
+        updateUI();
+      }
+
+      // Mouse input for aiming
+      function onMouseDown(e) {
+        if (gameState !== "playing" && gameState !== "breaking") return;
+        const rect = e.target.getBoundingClientRect();
+        dragStart = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+        isAiming = true;
+        shotPower = 0;
+        updatePower(0);
+      }
+
+      function onMouseMove(e) {
+        if (!isAiming) return;
+        const rect = e.target.getBoundingClientRect();
+        const current = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+        const dist = Vector.magnitude(Vector.sub(dragStart, current));
+        shotPower = Math.min(dist / 5, 100);
+        updatePower(shotPower);
+        renderAimLine(current);
+      }
+
+      function onMouseUp() {
+        if (!isAiming) return;
+        isAiming = false;
+        if (shotPower > 5) {
+          shoot();
+        }
+        clearAimLine();
+      }
+
+      function updatePower(power) {
+        document.getElementById("powerFill").style.width = power + "%";
+      }
+
+      function updateSpinPreview() {
+        // Placeholder for spin preview (e.g., curve line)
+      }
+
+      function renderAimLine(target) {
+        // Custom aim line (drawn in afterRender)
+      }
+
+      function clearAimLine() {
+        // Cleared on render
+      }
+
+      function shoot() {
+        const topSpin =
+          parseFloat(document.getElementById("topSpin").value) || 0;
+        const sideSpin =
+          parseFloat(document.getElementById("sideSpin").value) || 0;
+        const mousePos = mouse.position;
+        const direction = Vector.normalise(
+          Vector.sub(mousePos, cueBall.body.position)
+        );
+        const force = Vector.mult(direction, shotPower * 0.02);
+
+        Body.applyForce(cueBall.body, cueBall.body.position, force);
+        // Apply angular velocity for side spin
+        Body.setAngularVelocity(cueBall.body, sideSpin * 0.1);
+        // Top/bottom spin adjustment
+        const spinForce = Vector.mult(direction, topSpin * 0.005);
+        Body.applyForce(cueBall.body, cueBall.body.position, spinForce);
+
+        gameState = "playing";
+        setTimeout(() => checkEndTurn(), 2000);
+        // Reset spins
+        document.getElementById("topSpin").value = 0;
+        document.getElementById("sideSpin").value = 0;
+      }
+
+      // Pot ball logic
+      function potBall(body) {
+        const ball = balls.find((b) => b.body === body);
+        if (!ball || !world.bodies.includes(body)) return;
+        if (body.speed < 0.5) return;
+
+        World.remove(world, body);
+        if (ball.id === 8) {
+          // Check win condition
+          const myGroup = currentPlayer === 1 ? player1Group : player2Group;
+          const oppPotted = pottedBalls[currentPlayer === 1 ? 2 : 1].length;
+          if (myGroup && oppPotted === 7) {
+            win(currentPlayer);
+          } else {
+            foul(); // Early 8-ball
+          }
+        } else {
+          // Assign groups on first pot if breaking
+          if (gameState === "breaking" && !player1Group) {
+            player1Group = ball.group;
+            player2Group = ball.group === "solid" ? "stripe" : "solid";
+          }
+          // Only score if correct group
+          const myGroup = currentPlayer === 1 ? player1Group : player2Group;
+          if (myGroup && ball.group === myGroup) {
+            pottedBalls[currentPlayer].push(ball.num);
+            scores[currentPlayer]++;
+          } else if (myGroup) {
+            foul(); // Wrong ball
+          }
+          updateUI();
+        }
+        // Check group clear for 8-ball eligibility
+        if (pottedBalls[currentPlayer].length === 7) {
+          // Next shot must be 8-ball
+        }
+      }
+
+      function handleSpinTransfer(a, b) {
+        // Simplified spin transfer
+        const relPos = Vector.sub(b.position, a.position);
+        const normal = Vector.normalise(Vector.perp(relPos));
+        const spinA = a.angularVelocity * ballRadius;
+        Body.applyForce(a, a.position, Vector.mult(normal, spinA * 0.01));
+        Body.applyForce(b, b.position, Vector.mult(normal, -spinA * 0.01));
+      }
+
+      function checkEndTurn() {
+        const moving = balls.some(
+          (ball) =>
+            ball.body &&
+            (ball.body.speed > 0.1 || Math.abs(ball.body.angularSpeed) > 0.1)
+        );
+        if (!moving) {
+          if (gameState === "breaking") {
+            gameState = "playing";
+            // Table open if no pots on break
+            if (pottedBalls[1].length === 0 && pottedBalls[2].length === 0) {
+              player1Group = null; // Open table
+            }
+          }
+          // Switch turns unless continuing (potted correct ball)
+          const lastPotted = pottedBalls[currentPlayer].slice(-1)[0];
+          const myGroup = currentPlayer === 1 ? player1Group : player2Group;
+          if (
+            !lastPotted ||
+            !myGroup ||
+            ballData.find((b) => b.num === lastPotted)?.group !== myGroup
+          ) {
+            currentPlayer = currentPlayer === 1 ? 2 : 1;
+          }
+          updateUI();
+        } else {
+          setTimeout(checkEndTurn, 100);
+        }
+      }
+
+      function foul() {
+        currentPlayer = currentPlayer === 1 ? 2 : 1;
+        placeBallInHand();
+        updateUI();
+      }
+
+      function placeBallInHand() {
+        // Simplified: Reposition cue to center; in full version, enable drag placement
+        if (cueBall.body) World.remove(world, cueBall.body);
+        cueBall.body = Bodies.circle(
+          tableWidth / 2,
+          tableHeight / 2,
+          ballRadius,
+          {
+            restitution: 0.95,
+            friction: 0.005,
+            render: { fillStyle: "white" },
+          }
+        );
+        cueBall.body.label = "ball-0";
+        World.add(world, cueBall.body);
+        balls[0].body = cueBall.body;
+      }
+
+      function win(player) {
+        gameState = "won";
+        document.getElementById(
+          "winText"
+        ).textContent = `Player ${player} Wins!`;
+        document.getElementById("winModal").style.display = "block";
+      }
+
+      function resetGame() {
+        if (runner) Runner.stop(runner);
+        if (render) Render.stop(render);
+        World.clear(world);
+        engine = null;
+        balls = [];
+        pottedBalls = { 1: [], 2: [] };
+        player1Group = player2Group = null;
+        currentPlayer = 1;
+        gameState = "setup";
+        scores = { 1: 0, 2: 0 };
+        pockets.forEach((p) => World.add(world, p));
+        init();
+        document.getElementById("winModal").style.display = "none";
+      }
+
+      function updateUI() {
+        let groupText = "Break";
+        if (player1Group)
+          groupText = currentPlayer === 1 ? player1Group : player2Group;
+        else if (gameState === "playing")
+          groupText =
+            currentPlayer === 1
+              ? player1Group || "Open"
+              : player2Group || "Open";
+        document.getElementById(
+          "turnIndicator"
+        ).textContent = `Player ${currentPlayer}'s Turn (${groupText})`;
+        document.getElementById(
+          "score"
+        ).textContent = `Player 1: ${scores[1]} | Player 2: ${scores[2]}`;
+      }
+
+      // Custom rendering for numbers, stripes, and aim line
+      Events.on(render, "afterRender", () => {
+        const ctx = render.context;
+        // Draw ball numbers and stripes
+        balls.forEach((ball) => {
+          if (ball.body && world.bodies.includes(ball.body)) {
+            ctx.save();
+            ctx.translate(ball.body.position.x, ball.body.position.y);
+            ctx.rotate(ball.body.angle);
+            ctx.fillStyle = "white";
+            ctx.font = "bold 8px Arial";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText(ball.num.toString(), 0, 0);
+            if (ball.stripe) {
+              ctx.strokeStyle = "white";
+              ctx.lineWidth = 2;
+              ctx.beginPath();
+              ctx.moveTo(-ballRadius + 2, 0);
+              ctx.lineTo(ballRadius - 2, 0);
+              ctx.stroke();
+            }
+            ctx.restore();
+          }
+        });
+        // Aim line and cue stick
+        if (isAiming) {
+          const cueLength = 150;
+          const dirToTarget = Vector.normalise(
+            Vector.sub(mouse.position, cueBall.body.position)
+          );
+          const cueEnd = Vector.add(
+            cueBall.body.position,
+            Vector.mult(dirToTarget, cueLength)
+          );
+          ctx.beginPath();
+          ctx.moveTo(cueBall.body.position.x, cueBall.body.position.y);
+          ctx.lineTo(cueEnd.x, cueEnd.y);
+          ctx.strokeStyle = "white";
+          ctx.lineWidth = 2;
+          ctx.setLineDash([5, 5]); // Dashed for aim
+          ctx.stroke();
+          ctx.setLineDash([]);
+          // Cue stick (solid brown line behind)
+          const cueBack = Vector.add(
+            cueBall.body.position,
+            Vector.mult(Vector.neg(dirToTarget), 100)
+          );
+          ctx.beginPath();
+          ctx.moveTo(cueBack.x, cueBack.y);
+          ctx.lineTo(cueBall.body.position.x, cueBall.body.position.y);
+          ctx.strokeStyle = "#8B4513";
+          ctx.lineWidth = 4;
+          ctx.stroke();
+        }
+      });
+
+      // Start game
+      window.addEventListener("load", init);
+    </script>
+  </body>
+</html>
