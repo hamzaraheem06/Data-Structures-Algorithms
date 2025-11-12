@@ -1092,3 +1092,92 @@ Height of node **10** is **2**, since it is **two rows above the leaves**.
 - Height of **10** = 1 + max(height of left, right) = 1 + 1 = **2**
 
 ---
+
+## Heap
+
+A **Heap** is a binary tree with two rules:
+
+- Always a **complete binary tree** (all levels filled except possibly last, filled left to right).
+- In a **Min-Heap**, every parent node has a value **less than or equal to** its children.
+- In a **Max-Heap**, every parent node has a value **greater than or equal to** its children.
+
+---
+
+**TLDR:** Complete binary tree with a rule:
+
+- **Min-Heap:** parent ≤ children → smallest at root
+- **Max-Heap:** parent ≥ children → largest at root
+
+---
+
+### Structure of the Heap
+
+Heaps are usually stored in an **array**:
+
+- For index `i`:
+  - Left child → `2*i + 1`
+  - Right child → `2*i + 2`
+  - Parent → `(i-1) / 2`
+
+---
+
+### Key Operations in Heap
+
+| Operation       | Description                             | Time Complexity (Average) | Time Complexity (Worst) |
+| --------------- | --------------------------------------- | ------------------------- | ----------------------- |
+| **Insert**      | Add new value and restore heap property | O(log n)                  | O(log n)                |
+| **Get Root**    | Return min (min-heap) or max (max-heap) | O(1)                      | O(1)                    |
+| **Delete Root** | Remove root and restore heap structure  | O(log n)                  | O(log n)                |
+| **Traversal**   | No sorted order traversal               | O(n)                      | O(n)                    |
+
+---
+
+### How Heap Works
+
+- **Insertion:**
+
+  - Insert element at the end
+  - Compare with parent
+  - Swap upward until heap property is valid (**heapify up**)
+
+- **Deleting Root:**
+  - Remove root (min/max)
+  - Move last element to root
+  - Push it down until property holds (**heapify down**)
+
+---
+
+### Example
+
+**Max-Heap for elements:** 50, 40, 30, 20, 10
+
+```css
+      50
+     /  \
+    40   30
+    / \
+    20 10
+```
+
+---
+
+### Advantages
+
+- Efficient for getting smallest or largest element quickly.
+- Good for priority queues.
+- Insertion and deletion are fast.
+
+### Disadvantages
+
+- Not useful for searching arbitrary values.
+- Only root is guaranteed min/max — not sorted order.
+- Traversing in sorted order is not direct.
+
+---
+
+### Notes & Best Practices
+
+- Always forms a **complete binary tree**.
+- Root gives **min** (min-heap) or **max** (max-heap).
+- Usually implemented using **arrays**.
+- Avoid using heap when you frequently need sorted traversal.

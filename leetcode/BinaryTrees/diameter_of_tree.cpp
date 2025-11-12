@@ -38,7 +38,7 @@ public:
 
 
         return max(leftHeight + rightHeight, max(leftDiameter, rightDiameter));
-    }
+    }6
 
     /*
     Time complexity:

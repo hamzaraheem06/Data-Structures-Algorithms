@@ -220,28 +220,28 @@ class LinkedList {
 
         void swapPairs() {
             // If list is empty or has only one node, no swap needed
-        if (!head || !head->next) {
-            return;
-        }
+            if (!head || !head->next) {
+                return;
+            }
 
-        ListNode dummy(0); // Dummy node to handle head updates
-        dummy.next = head;
-        ListNode* prev = &dummy;
-        ListNode* curr = head;
+            ListNode dummy(0); // Dummy node to handle head updates
+            dummy.next = head;
+            ListNode* prev = &dummy;
+            ListNode* curr = head;
 
-        while (curr && curr->next) {
-            ListNode* next = curr->next; // Next node to swap with
-            ListNode* after = next->next;
+            while (curr && curr->next) {
+                ListNode* next = curr->next; // Next node to swap with
+                ListNode* after = next->next;
 
-            // Swap nodes
-            prev->next = next;    // Previous points to next
-            next->next = curr;    // Next points to current
-            curr->next = after;  // Current points to next->next
+                // Swap nodes
+                prev->next = next;    // Previous points to next
+                next->next = curr;    // Next points to current
+                curr->next = after;  // Current points to next->next
 
-            // Move pointers
-            prev = curr;
-            curr = after;
-        }
+                // Move pointers
+                prev = curr;
+                curr = after;
+            }
 
             head = dummy.next;
         }
