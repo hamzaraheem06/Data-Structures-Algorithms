@@ -728,6 +728,8 @@ struct Node {
 
 ---
 
+## **Types of Trees**:
+
 ## Binary Trees
 
 A **Binary Tree** is a **a type of tree** in which each node can have **at most two children** — referred to as the **left child** and the **right child**.
@@ -1093,6 +1095,133 @@ Height of node **10** is **2**, since it is **two rows above the leaves**.
 
 ---
 
+## AVL Trees
+
+**AVL tree** — self-balancing binary search tree (BST) that maintains O(log n) height by keeping the heights of left/right subtrees of every node within 1.
+
+## Key properties
+
+- Binary Search Tree property: left < node < right
+- Balance Factor (BF) = height(left) - height(right)
+  - BF ∈ { -1, 0, 1 } for every node
+- Height is guaranteed O(log n)
+
+## Rotations (to restore balance)
+
+- Right Rotation (RR) — fixes left-left case
+- Left Rotation (LL) — fixes right-right case
+- Left-Right (LR) — left child needs left rotation then current node right rotation
+- Right-Left (RL) — right child needs right rotation then current node left rotation
+
+Diagrams (informal):
+
+```
+- LL (right rotate at y) — before and after:
+
+Before:
+      y
+     / \
+    x   C
+   / \
+  A   B
+
+Right rotate at y -> After:
+      x
+     / \
+    A   y
+       / \
+      B   C
+
+- RR (left rotate at x) — before and after:
+
+Before:
+      x
+     / \
+    A   y
+       / \
+      B   C
+
+Left rotate at x -> After:
+      y
+     / \
+    x   C
+   / \
+  A   B
+```
+
+## Insertion (high level)
+
+1. Insert like BST.
+2. Walk back up and update heights.
+3. If node becomes unbalanced (|BF| > 1), identify case:
+   - BF > 1 and key < left->key → Right rotate (LL)
+   - BF < -1 and key > right->key → Left rotate (RR)
+   - BF > 1 and key > left->key → Left rotate(left), then Right rotate (LR)
+   - BF < -1 and key < right->key → Right rotate(right), then Left rotate (RL)
+4. After rotation heights updated; tree balanced.
+
+## Deletion (high level)
+
+1. Delete like BST (0/1/2 child cases).
+2. On the path back to root update heights and check BF.
+3. Apply same 4 rotation cases as needed (case detection uses children BFs).
+
+## Complexity
+
+- Search: O(log n)
+- Insertion: O(log n)
+- Deletion: O(log n)
+- Space: O(n) (nodes)
+
+## When to use
+
+- When balanced BST operations are required with guaranteed logarithmic time.
+- When frequent inserts/deletes require strict height bounds (better worst-case than plain BST).
+
+## C++ minimal node + helper functions (reference)
+
+```cpp
+struct Node {
+    int key;
+    Node* left;
+    Node* right;
+    int height;
+    Node(int k): key(k), left(nullptr), right(nullptr), height(1) {}
+};
+
+int height(Node* n){ return n ? n->height : 0; }
+int balance(Node* n){ return n ? height(n->left) - height(n->right) : 0; }
+
+Node* rightRotate(Node* y){
+    Node* x = y->left;
+    Node* T2 = x->right;
+    x->right = y;
+    y->left = T2;
+    y->height = 1 + max(height(y->left), height(y->right));
+    x->height = 1 + max(height(x->left), height(x->right));
+    return x;
+}
+
+Node* leftRotate(Node* x){
+    Node* y = x->right;
+    Node* T2 = y->left;
+    y->left = x;
+    x->right = T2;
+    x->height = 1 + max(height(x->left), height(x->right));
+    y->height = 1 + max(height(y->left), height(y->right));
+    return y;
+}
+```
+
+## Tips & pitfalls
+
+- Always update node heights after changes.
+- When deciding LR/RL, check child’s balance to choose correct double-rotation.
+- Beware single-node trees (height logic and edge cases).
+- For simplicity, implement recursive insert/delete that returns new subtree root.
+
+---
+
 ## Heap
 
 A **Heap** is a binary tree with two rules:
@@ -1181,3 +1310,275 @@ Heaps are usually stored in an **array**:
 - Root gives **min** (min-heap) or **max** (max-heap).
 - Usually implemented using **arrays**.
 - Avoid using heap when you frequently need sorted traversal.
+
+---
+
+## Trie (Prefix Tree)
+
+A **Trie** is a specialized tree data structure used to store strings
+efficiently, especially when working with prefixes, autocomplete, and
+dictionary operations.
+
+## Structure of a Trie
+
+Each TrieNode typically stores: - **Children** (array/map) - **isEnd
+flag** → marks the end of a complete word
+
+### Index Rules (for lowercase a--z)
+
+- Children array size: **26**
+
+- Child index for a character `c`:
+
+  ```text
+  index = c - 'a'
+  ```
+
+### Root Node
+
+- Represents an empty string
+- Has no character itself
+
+## Properties
+
+- Always a **prefix tree**
+- Each edge represents a **character**
+- Path from root → node forms a **prefix**
+- Words that share prefixes share nodes → memory efficient
+- Depth of Trie = length of longest word
+
+## Key Operations and Complexity
+
+Operation Description Time Complexity
+
+1. **Insert(word)** Insert characters one by one O(length)
+
+2. **Search(word)** Check if the full word exists O(length)
+
+3. **StartsWith(prefix)** Check if any word begins with prefix O(length)
+
+4. **Delete(word)** Remove a word safely (optional) O(length)
+
+## How a Trie Works
+
+### Insert Word
+
+1.  Start at root
+2.  For each character in the word:
+    - If child doesn't exist → create it
+    - Move to that child
+3.  Mark last node with `isEnd = true`
+
+---
+
+### Search Word
+
+- Traverse character-by-character
+- If any link is missing → word doesn't exist
+- After finishing traversal → check `isEnd == true`
+
+---
+
+### Search Prefix
+
+- Traverse nodes using prefix characters
+- If traversal succeeds, prefix exists
+- No need to check `isEnd`
+
+## Example Trie for Words
+
+Words: `cat`, `can`, `bat`
+
+            (root)
+            /     \
+           c       b
+          /         \
+         a           a
+        / \           \
+       t   n           t
+
+## Advantages
+
+- Extremely fast prefix lookups
+- Insert/Search cost depends only on **word length**, not number of
+  words
+- Great for autocomplete and dictionary-type problems
+
+## Disadvantages
+
+- Can consume a lot of memory (large alphabets → more children)
+- Not efficient for storing a few very long strings
+- Deletion logic is slightly more complex
+
+## Best Practices
+
+- For lowercase English letters → use `children[26]` array
+- For general alphabets → use `unordered_map<char, TrieNode*>`
+- Always implement these three methods for interviews:
+  - `insert(word)`
+  - `search(word)`
+  - `startsWith(prefix)`
+
+## Common Interview Problems Using Trie
+
+- Autocomplete System
+- Word Dictionary
+- Word Break problems
+- Replace Words (prefix dictionary)
+- Search Suggestions System
+- Count words starting with a prefix
+- Longest prefix match (like routers)
+
+## Sample TrieNode Structure (C++)
+
+```cpp
+struct TrieNode {
+    TrieNode* children[26];
+    bool isEnd;
+
+    TrieNode() {
+        for (int i = 0; i < 26; i++) children[i] = nullptr;
+        isEnd = false;
+    }
+};
+```
+
+## 2. Graphs
+
+A **graph** is a non-linear data structure consisting of a set of
+**vertices (nodes)** and **edges** that connect pairs of vertices.\
+Graphs are used to represent relationships between objects.
+
+## Basic Terminology
+
+- **Vertex (Node):**\
+  A fundamental unit of the graph where data is stored.
+
+- **Edge:**\
+  A connection between two vertices.
+
+- **Adjacent Vertices:**\
+  Two vertices connected directly by an edge.
+
+- **Degree:**\
+  Number of edges connected to a vertex.
+
+  - **In-degree:** Incoming edges (directed graphs)
+  - **Out-degree:** Outgoing edges (directed graphs)
+
+- **Path:**\
+  A sequence of vertices connected by edges.
+
+- **Cycle:**\
+  A path where the starting and ending vertex is the same.
+
+- **Connected Graph:**\
+  Every vertex is reachable from every other vertex.
+
+- **Weighted Graph:**\
+  Each edge has a weight (cost, distance, etc.).
+
+## Visual Example (Conceptual)
+
+       A ----- B
+       | \     |
+       |    \  |
+       C ----- D
+
+This represents an undirected graph with edges between A-B, A-C, A-D,
+C-D, and B-D.
+
+## Types of Graphs
+
+### **1. Undirected Graph**
+
+Edges do not have a direction.\
+Example:\
+A --- B means A is connected to B **both ways**.
+
+### **2. Directed Graph (Digraph)**
+
+Edges have directions.\
+A → B means the connection is **from A to B**.
+
+### **3. Weighted Graph**
+
+Edges carry weights.\
+Useful for shortest path algorithms (Dijkstra, Bellman-Ford).
+
+### **4. Unweighted Graph**
+
+All edges are considered equal.
+
+### **5. Cyclic Graph**
+
+Contains at least one cycle.
+
+### **6. Acyclic Graph**
+
+Contains **no cycles**.\
+Example: **Directed Acyclic Graph (DAG)** used in task scheduling.
+
+### **7. Connected Graph**
+
+All nodes are reachable from any starting node.
+
+### **8. Disconnected Graph**
+
+Some nodes cannot be reached from others.
+
+## Graph Representation
+
+### **1. Adjacency Matrix**
+
+A 2D matrix where: - `matrix[i][j] = 1` if an edge exists\
+
+- Space complexity: O(V²)
+
+### **2. Adjacency List**
+
+Each vertex stores a list of adjacent nodes.\
+
+- Space efficient\
+- Space complexity: O(V + E)
+
+Example:
+
+```cpp
+vector<vector<int>> graph(n);
+graph[u].push_back(v);
+graph[v].push_back(u);
+```
+
+## Graph Traversals
+
+### **1. Depth-First Search (DFS)**
+
+- Explores as far as possible before backtracking.
+- Implemented using recursion or a stack.
+
+### **2. Breadth-First Search (BFS)**
+
+- Explores all neighbors level by level.
+- Implemented using a queue.
+
+## Real-World Applications
+
+- Social networks (friend connections)
+- Google Maps (shortest paths)
+- Web crawlers (graph traversal)
+- Recommendation systems
+- Network routing
+- Dependency resolution (DAGs)
+
+## Advantages
+
+- Represents complex relationships
+- Useful for modeling real-world networks
+- Supports many powerful algorithms
+
+## Disadvantages
+
+- More complex to implement
+- Memory usage depends on representation
+- Some graph algorithms are expensive (e.g., O(V³))

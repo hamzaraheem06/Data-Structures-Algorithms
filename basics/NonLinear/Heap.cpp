@@ -57,7 +57,6 @@ class Heap {
     }
 
     /*
-    
     pop logic:
 
     we will always return the root of the heap
