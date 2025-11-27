@@ -53,6 +53,12 @@
     "iomanip": "cpp",
     "span": "cpp",
     "sstream": "cpp",
-    "variant": "cpp"
-  }
+    "variant": "cpp",
+    "map": "cpp",
+    "queue": "cpp",
+    "xutility": "cpp",
+    "xiosbase": "cpp",
+    "xstring": "cpp"
+  },
+  "cmake.sourceDirectory": "E:/C++/Pixelator"
 }

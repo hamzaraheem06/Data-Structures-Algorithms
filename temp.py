@@ -67,3 +67,4 @@ for p in hids_stats:
         print(f"\nHeuristic-IDS found goal {goal} at depth {depth_hids} with path: {path_hids}")
     else:
         print(f"\nHeuristic-IDS did NOT find goal {goal} up to depth {max_depth_task4}")
+
